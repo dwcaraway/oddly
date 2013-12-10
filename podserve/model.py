@@ -1,7 +1,7 @@
 import datetime
 from flask.ext.mongoengine import MongoEngine, Document, DynamicDocument
 from flask.ext.security import RoleMixin, UserMixin
-from mongoengine import StringField, EmailField, DateTimeField, ListField, ReferenceField, BooleanField, URLField, ImageField
+from mongoengine import StringField, EmailField, DateTimeField, ListField, ReferenceField, BooleanField, URLField
 
 __author__ = 'dwcaraway'
 __credits__ = ['Dave Caraway']
@@ -49,7 +49,7 @@ class Organization(Document):
     description = StringField(required=True)
     created_at = DateTimeField(default=datetime.datetime.now, required=True)
     updated_at = DateTimeField(default=datetime.datetime.now)
-    logo = ImageField()
+    logo = URLField()
     children = ListField(ReferenceField(document_type='Organization'), default=[])
     parent = ReferenceField(document_type='Organization')
 
@@ -75,6 +75,8 @@ class Dataset(DynamicDocument):
     last_modified_by = ReferenceField(document_type=User, required=True)
     schema = URLField(max_length=255, required=True, default="http://project-open-data.github.io/schema"
                                                              "/1_0_final/single_entry.json")
+
+    #TODO validate the dataset on insert/update
 
     meta = {
         'indexes': ['-created_at', 'organization'],

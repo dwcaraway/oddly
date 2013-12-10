@@ -1,7 +1,9 @@
+from flask import Flask
+
 __author__ = 'dwcaraway'
 __credits__ = ['Dave Caraway']
-import os
 
+app = Flask(__name__)
 
 class DefaultConfig(object):
     MONGODB_SETTINGS = {
@@ -19,16 +21,13 @@ class DefaultConfig(object):
     SECURITY_CHANGEABLE = True
     SECURITY_RECOVERABLE = True
 
-def create_application(config_object=DefaultConfig):
-    from flask import Flask
-    application = Flask(__name__)
-    application.config.from_object(config_object)
+def init_application(config_object=DefaultConfig):
+    app.config.from_object(config_object)
 
-    from podserve.model import db, User, Role
-    db.init_app(application)
+    from podserve.model import db
+    db.init_app(app)
 
-    return application
+    #import web to initialize the routes
+    import podserve.web
 
-if __name__ == "__main__":
-    app = create_application()
-    app.run()
+init_application()

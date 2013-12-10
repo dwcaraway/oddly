@@ -1,10 +1,9 @@
-from podserve import create_application
+from podserve import app
 
 __author__ = 'dwcaraway'
 
-if __name__ == "__main__":
+if __name__ == '__main__':
+    app.run()
     import logging
     import sys
     logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
-    app = create_application()
-    app.run()
