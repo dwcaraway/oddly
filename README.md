@@ -16,7 +16,7 @@ You can interact with the [Apiary.io mock server](http://pod.apiary.io)
 
 Running the Server Locally
 ======
-First [install pip](http://www.pip-installer.org/en/latest/installing.html)
+First, [install Python 2.7](http://www.python.org/download/) and [install pip](http://www.pip-installer.org/en/latest/installing.html).
 
 Next, install virtualenv
 ```
