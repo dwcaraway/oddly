@@ -1,7 +1,7 @@
 from podserve import app
 import json, os
-from flask import make_response, Flask, jsonify, Response, abort
-from dougrain import Document, Builder
+from flask import jsonify, Response, abort
+from dougrain import Builder
 from podserve.model import Dataset, User, Organization
 
 __author__ = 'dwcaraway'
@@ -155,12 +155,3 @@ def validate(dataset):
     """
     #TODO implement
     abort(501)
-
-# @app.route('/api/help', methods = ['GET'])
-# def help():
-#     """Print available functions."""
-#     func_list = {}
-#     for rule in app.url_map.iter_rules():
-#         if rule.endpoint != 'static':
-#             func_list[rule.rule] = app.view_functions[rule.endpoint].__doc__
-#     return jsonify(func_list)
