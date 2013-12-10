@@ -14,5 +14,5 @@ PY_CACHE = os.path.join(virtenv, 'lib', '2.7', 'site-packages')
 os.environ['PYTHON_EGG_CACHE'] = os.path.join(PY_CACHE)
 virtualenv = os.path.join(virtenv, 'bin/activate_this.py')
 
-from podserve import create_application
-application = create_application()
+from podserve import app as application, init_application
+init_application()
