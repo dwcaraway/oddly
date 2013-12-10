@@ -16,7 +16,8 @@ You can interact with the [Apiary.io mock server](http://pod.apiary.io)
 
 Running the Server Locally
 ======
-First, [install Python 2.7](http://www.python.org/download/) and [install pip](http://www.pip-installer.org/en/latest/installing.html).
+First, install [Python 2.7](http://www.python.org/download/), [pip](http://www.pip-installer.org/en/latest/installing.html)
+and [MongoDB](http://www.mongodb.org/).
 
 Next, install virtualenv
 ```
@@ -45,3 +46,8 @@ Run the server
 ```
 $(podserve) python start.py
 ```
+
+Apache Hosting
+==============
+The server includes an application.py file for serving content using Apache with mod-wsgi.
+*** TODO: Add instructions ***
