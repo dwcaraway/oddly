@@ -1,11 +1,20 @@
 What is PODServe?
 ======
 
-A (hypermedia) REST service for managing [Project Open Data formatted](http://project-open-data.github.io/) metadata using the Python Flask microframework.
-Responses are in [Hypermedia Application (HAL)](http://pod.apiary.io) format.
+A hypermedia REST service for managing [Project Open Data formatted](http://project-open-data.github.io/) metadata using
+the Python [Flask](http://flask.pocoo.org/) microframework.
 
+Responses are in [Hypermedia Application Language (HAL)](http://pod.apiary.io) and standard JSON format.
 
-Quick Start
+Documentation
+=======
+[Interactive documentation](http://docs.pod.apiary.io/) is hosted at Apiary.io
+
+Mock Server
+=======
+You can interact with the [Apiary.io mock server](http://pod.apiary.io)
+
+Running the Server Locally
 ======
 First [install pip](http://www.pip-installer.org/en/latest/installing.html)
 
@@ -36,11 +45,3 @@ Run the server
 ```
 $(podserve) python start.py
 ```
-
-Documentation
-=======
-[Interactive documentation](http://docs.pod.apiary.io/) is hosted at Apiary.io
-
-Mock Server
-=======
-You can interact with the [Apiary.io mock server](http://pod.apiary.io)
