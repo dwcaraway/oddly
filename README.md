@@ -4,7 +4,7 @@ What is PODServe?
 A hypermedia REST service for managing [Project Open Data formatted](http://project-open-data.github.io/) metadata using
 the Python [Flask](http://flask.pocoo.org/) microframework.
 
-Responses are in [Hypermedia Application Language (HAL)](http://pod.apiary.io) and standard JSON format.
+Responses are in [Hypermedia Application Language (HAL)](http://stateless.co/hal_specification.html) and standard JSON format.
 
 Documentation
 =======
