@@ -3,9 +3,8 @@ import random
 import sys
 from flask import current_app
 from podserve import app, init_application
-__author__ = 'dwcaraway and ngerakines'
-__copyright__ = 'Copyright 2011 Fog Mine, LLC'
-__credits__ = ['Dave Caraway', "Nick Gerakines"]
+__author__ = 'dwcaraway'
+__credits__ = ['Dave Caraway']
 
 # Set Path
 pwd = os.path.abspath(os.path.dirname(__file__))
