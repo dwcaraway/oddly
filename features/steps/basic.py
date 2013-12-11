@@ -12,3 +12,7 @@ __author__ = 'dwcaraway'
 __credits__ = ['Dave Caraway']
 
 logger = logging.getLogger(__name__)
+
+@given(u'podserve is running')
+def flask_setup(context):
+    assert context.client
