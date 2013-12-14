@@ -2,6 +2,9 @@ Feature: The dataset resources
 
   Background:
     Given podserve is running
+    Given the following users exist
+    | display_name   | email            | password |
+    | dave | dave@fogmine.com | secret |
 
   Scenario: All endpoints are discoverable from /
     When I get the 'root' resource

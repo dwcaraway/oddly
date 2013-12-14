@@ -4,3 +4,4 @@ flask-security
 py-bcrypt
 pil
 dougrain
+Flask-OAuthlib
