@@ -1,4 +1,5 @@
 import datetime
+from mongoengine.document import EmbeddedDocument
 from flask.ext.mongoengine import MongoEngine, Document, DynamicDocument
 from flask.ext.security import RoleMixin, UserMixin
 from mongoengine import StringField, EmailField, DateTimeField, ListField, ReferenceField, BooleanField, URLField
@@ -24,7 +25,7 @@ class User(Document, UserMixin):
     """
     A user in the system
     """
-    password = StringField(max_length=255, required=True)
+    password = StringField(max_length=255, required=True) #a hash of the user's password
     email = EmailField(max_length=255, required=True, unique=True)
     display_name = StringField(max_length=255, required=True)
     created_at = DateTimeField(default=datetime.datetime.now, required=True)
@@ -45,6 +46,9 @@ class User(Document, UserMixin):
 
 
 class Organization(Document):
+    """
+    This is a collection of datasets and users
+    """
     title = StringField(max_length=255, required=True)
     description = StringField(required=True)
     created_at = DateTimeField(default=datetime.datetime.now, required=True)
@@ -56,6 +60,21 @@ class Organization(Document):
     meta = {
         'indexes': ['-created_at', 'title'],
         'ordering': ['-created_at']
+    }
+
+    def __unicode__(self):
+        return self.title
+
+class Membership(Document):
+    """
+    Represents a user's role within an organization
+    """
+    user = ReferenceField(document_type='User')
+    organization = ReferenceField(document_type='Organization')
+    role = ReferenceField(document_type='Role')
+
+    meta = {
+        'indexes': ['user', 'organization'],
     }
 
     def __unicode__(self):
@@ -82,3 +101,13 @@ class Dataset(DynamicDocument):
         'indexes': ['-created_at', 'organization'],
         'ordering': ['-created_at']
     }
+
+class Schema(Document):
+    """
+    JSON schema referenced by other resources in the system.
+    """
+    created_at = DateTimeField(default=datetime.datetime.now, required=True)
+    created_by = ReferenceField(document_type=User, required=True)
+    last_modified_at = DateTimeField(default=datetime.datetime.now, required=True)
+    last_modified_by = ReferenceField(document_type=User, required=True)
+    text = StringField(required=True) #the actual JSON schema text

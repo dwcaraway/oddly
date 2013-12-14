@@ -2,21 +2,21 @@ from podserve import app
 import json, os
 from flask import jsonify, Response, abort
 from dougrain import Builder
-from podserve.model import Dataset, User, Organization
+from podserve.model import Dataset, User, Organization, Schema
 
 __author__ = 'dwcaraway'
 __credits__ = ['Dave Caraway']
 
 #TODO refactor this function out of code
-def load_rels():
-    pwd = os.path.abspath(os.path.dirname(__file__))
-    file_path = os.path.join(pwd, 'rels.json')
-
-    with open(file_path, 'r') as f:
-        return json.loads(f.read())
-    return {}
-
-relations = load_rels()
+# def load_rels():
+#     pwd = os.path.abspath(os.path.dirname(__file__))
+#     file_path = os.path.join(pwd, 'rels.json')
+#
+#     with open(file_path, 'r') as f:
+#         return json.loads(f.read())
+#     return {}
+#
+# relations = load_rels()
 
 @app.route('/', methods=['GET'])
 def get_api_endpoints():
@@ -25,19 +25,19 @@ def get_api_endpoints():
     """
     b = Builder('/').add_curie('ep', 'rel/{rel}')\
         .add_link('ep:user', '/users')\
-        .add_link('ep:dataset', '/datasets').\
-        add_link('ep:organization', '/organizations')\
-        .add_link('ep:error', '/validate')
+        .add_link('ep:dataset', '/datasets')\
+        .add_link('ep:organization', '/organizations')\
+        .add_link('ep:schema', '/schema')
     o = b.as_object()
 
     return Response(json.dumps(o), mimetype='application/hal+json')
 
 @app.route('/datasets', methods=['GET'])
-def list_all_datasets(page=1, per_page=10):
+def list_all_datasets(page=1):
     """
     Lists all Datasets
     """
-    pagination = Dataset.objects.paginate(page=page, per_page=per_page)
+    pagination = Dataset.objects.paginate(page=page, per_page=10)
     b = Builder('/datasets')
     for dataset in pagination.iter_pages():
         b.add_link('/rel/dataset', '/datasets/%d' % dataset.id)
@@ -134,24 +134,32 @@ def handle_orgs():
     #TODO implement
     return abort(501)
 
-@app.route('/rels', methods=['GET'])
-@app.route('/rels/<relation>', methods=['GET'])
-def get_rel(relation=None):
+@app.route('/schema', methods=['GET'])
+def list_all_schema(page=1):
     """
-    Handle routing of Link Relations, which are JSON schema (see json-schema.org)
+    Handle routing of JSON schema (see json-schema.org)
     """
-    try:
-        rel = relations
-        if relation:
-            rel = relations[relation]
-        return jsonify(rel)
-    except:
-        abort(404)
+    ret =  Schema.objects.paginate(page=page, per_page=10)
+    return jsonify(ret)
 
-@app.route('/validate', methods=['POST'])
-def validate(dataset):
+@app.route('/schema', methods=['POST'])
+def create_schema():
     """
-    Validate a dataset using the indicated schema
+    Creates a schema
     """
+    schema = Schema()
+    schema.save()
+    b = Builder('/schema').add_link('/rel/schema', '/schema/%d' % schema.id)
+
     #TODO implement
-    abort(501)
+    return abort(501)
+
+
+@app.route('/schema/{id}', methods=['GET'])
+def get_schema(id=None):
+    """
+    Handle routing of JSON schema (see json-schema.org)
+    """
+    ret =  Schema.objects.get_or_404(_id=id)
+    return jsonify(ret)
+
