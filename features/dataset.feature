@@ -4,8 +4,8 @@ Feature: The dataset resources
     Given podserve is running
 
   Scenario: All endpoints are discoverable from /
-    When I get '/'
-    Then the response should link to 'ep:organization'
-    And the response should link to 'ep:user'
-    And the response should link to 'ep:dataset'
-    And the response should link to 'ep:schema'
+    When I get the 'root' resource
+    Then I should see a link to the 'organization' resource
+    And I should see a link to the 'user' resource
+    And I should see a link to the 'dataset' resource
+    And I should see a link to the 'schema' resource

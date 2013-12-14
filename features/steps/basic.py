@@ -8,6 +8,19 @@ __credits__ = ['Dave Caraway']
 
 logger = logging.getLogger(__name__)
 
+resource = dict()
+resource['root'] = '/'
+resource['organization'] = '/organizations'
+resource['dataset'] = '/datasets'
+resource['user'] = '/users'
+resource['schema'] = '/schema'
+
+def get_url(label):
+    assert string.strip(label), "empty label %s" % label
+    if label in resource:
+        return resource[label]
+    raise Exception('Resource not found: "%s"' % label)
+
 def get(context, url=None, follow_redirects=True):
     return context.client.get(url, follow_redirects=follow_redirects, environ_base={'HTTP_USER_AGENT': u'Mozilla/5.0 (Windows NT 6.2; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/32.0.1667.0 Safari/537.36'})
 
@@ -32,12 +45,15 @@ def delete(context, url=None, follow_redirects=True):
 def flask_setup(context):
     assert context.client
 
-@when(u"I get '{resource}'")
+@when(u"I get the '{resource}' resource")
 def get_resource(context, resource=None):
-    context.page = get(context, resource)
+    url = get_url(resource)
+    context.page = get(context, url)
 
-@then(u"The response should link to '{rel}'")
-def is_link(context, rel=None):
-    assert len(string.strip(rel)) > 0
+@then(u"I should see a link to the '{resource}' resource")
+def is_link(context, resource):
+    expected_url = get_url(resource)
     doc = Document.from_object(json.loads(context.page.data))
-    assert doc.links.get(rel, None), "Links for relation %s not in %s" % (rel, doc.links.keys())
+    actual_url = doc.links.get('ep:'+resource, None).url()
+    assert actual_url, "Resource 'ep:%s' not found in links %s" % (resource, doc.links.keys())
+    assert expected_url == actual_url, "actual url [%s] does not match expected url [%s]" % (actual_url, expected_url)
