@@ -2,7 +2,8 @@ import datetime
 from mongoengine.document import EmbeddedDocument
 from flask.ext.mongoengine import MongoEngine, Document, DynamicDocument
 from flask.ext.security import RoleMixin, UserMixin
-from mongoengine import StringField, EmailField, DateTimeField, ListField, ReferenceField, BooleanField, URLField
+from mongoengine import StringField, EmailField, DateTimeField, ListField, ReferenceField, BooleanField, URLField,\
+    EmbeddedDocumentField
 
 __author__ = 'dwcaraway'
 __credits__ = ['Dave Caraway']
@@ -43,6 +44,61 @@ class User(Document, UserMixin):
 
     def __unicode__(self):
         return self.email
+
+
+class Client(Document):
+    """
+    An API OAuth v1 client
+    """
+    user = ReferenceField(document_type='User', required=True)
+    client_key = StringField(required=True)
+    client_secret = StringField(required=True)
+    realms = ListField(StringField(), default=[])
+    redirect_uris = ListField(StringField(), default=[])
+
+    meta = {
+        'collection': 'clients',
+        'indexes': ['client_key', 'user']
+    }
+
+
+class RequestToken(Document):
+    """
+    One-time request and verifier token. Request token is designed for exchanging access token. Verifier token is
+    designed to verify the current user. It is always suggested that you combine request token and verifier together.
+    """
+    #TODO store in cache
+    user = ReferenceField(document_type='User', required=True)
+    client = ReferenceField(document_type='Client', required=True)
+    token = StringField(unique=True, required=True)
+    secret = StringField(required=True)
+    verifier = StringField()
+    redirect_uri = URLField()
+    realms = ListField(StringField(), default=[])
+
+
+class Nonce(Document):
+    """
+    Timestamp and nonce is a token for preventing repeating requests. The timelife of a timestamp and nonce
+    is 60 seconds
+    """
+    #TODO store in cache
+    timestamp = DateTimeField(default=datetime.datetime.now, required=True)
+    nonce = StringField()
+    client = ReferenceField(Client, required=True)
+    request_token = StringField()
+    access_token = StringField()
+
+class AccessToken(Document):
+    """
+    An access token is the final token that could be use by the client. Client will send access token everytime when it
+    needs to access a resource.
+    """
+    client = ReferenceField(document_type='Client', required=True)
+    user = ReferenceField(document_type='User') #TODO is this required? client has the user too
+    token = StringField(required=True) #Access Token
+    secret = StringField(required=True) #Access token secret
+    realms = ListField(StringField(), default=True) # Realms with this access token
 
 
 class Organization(Document):

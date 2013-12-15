@@ -2,7 +2,7 @@ import os
 import random
 import sys
 from flask import current_app
-from podserve import app, init_application
+from podserve import app
 __author__ = 'dwcaraway'
 __credits__ = ['Dave Caraway']
 
@@ -12,6 +12,9 @@ project = os.path.basename(pwd)
 new_path = pwd.strip(project)
 activate_this = os.path.join(new_path, 'itemeyes')
 sys.path.append(activate_this)
+
+import logging, sys
+logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
 
 MONGO_DATABASE = 'pod_behave_' + str(random.randint(2000, 5000))
 
@@ -45,6 +48,7 @@ class FlaskTestClientProxy(object):
 
 
 def before_scenario(context, feature):
+    from podserve import app, init_application
     init_application(BehaveConfig)
     app.wsgi_app = FlaskTestClientProxy(app.wsgi_app)
     context.app = app

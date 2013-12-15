@@ -1,6 +1,8 @@
 
 from behave import given, when, then
 from dougrain import Document
+from ..environment import get_extension
+from flask.ext.security.utils import encrypt_password
 import logging, json, string
 
 __author__ = 'dwcaraway'
@@ -44,6 +46,20 @@ def delete(context, url=None, follow_redirects=True):
 @given(u'podserve is running')
 def flask_setup(context):
     assert context.client
+
+
+@given(u'the following users exist')
+def create_users(context):
+    app = context.app
+    with app.app_context():
+        security = get_extension(context, 'security')
+        assert security
+        for row in context.table:
+            enc_password = encrypt_password(row['password'])
+            security.datastore.create_user(
+                email=row['email'],
+                password=enc_password,
+                display_name=row['display_name'])
 
 @when(u"I get the '{resource}' resource")
 def get_resource(context, resource=None):
