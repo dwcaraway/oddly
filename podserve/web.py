@@ -1,11 +1,13 @@
 from podserve import app
-import json, os
+import json, logging
 from flask import jsonify, Response, abort
 from dougrain import Builder
 from podserve.model import Dataset, User, Organization, Schema
 
 __author__ = 'dwcaraway'
 __credits__ = ['Dave Caraway']
+
+log = logging.getLogger(__name__)
 
 #TODO refactor this function out of code
 # def load_rels():
@@ -105,10 +107,11 @@ def list_all_orgs(page=1, per_page=10):
     """
     Lists all Organizations
     """
-    pagination = Organization.objects.paginate(page=page, per_page=per_page)
-    b = Builder('/users')
-    for org in pagination.iter_pages():
-        b.add_link('/rel/organization', '/organizations/%d' % org.id)
+    pagination = Organization.objects.paginate(page=int(page), per_page=per_page)
+
+    b = Builder('/organizations')
+    for org in pagination.items:
+        b.add_link('/rel/organization', '/organizations/%s' % org.id)
 
     o = b.as_object()
 

@@ -61,6 +61,17 @@ def create_users(context):
                 password=enc_password,
                 display_name=row['display_name'])
 
+
+@given(u'the following organizations exist')
+def create_organizations(context):
+    from podserve.model import Organization
+    app = context.app
+    with app.app_context():
+        for row in context.table:
+            Organization(title=row['title'], description=row['description']).save()
+
+
+
 @when(u"I get the '{resource}' resource")
 def get_resource(context, resource=None):
     url = get_url(resource)
@@ -70,6 +81,19 @@ def get_resource(context, resource=None):
 def is_link(context, resource):
     expected_url = get_url(resource)
     doc = Document.from_object(json.loads(context.page.data))
-    actual_url = doc.links.get('ep:'+resource, None).url()
+    link = doc.links.get('ep:'+resource, None)
+    assert link, 'Resource link not found: %s'% resource
+    actual_url = link.url
+    assert actual_url, "Resource 'ep:%s' not found in links %s" % (resource, doc.links.keys())
+    assert expected_url == actual_url, "actual url [%s] does not match expected url [%s]" % (actual_url, expected_url)
+
+@then(u"I should see {num_links} links for the '{rel_uri}' relation")
+def count_links(context, num_links, rel_uri):
+
+    doc = Document.from_object(json.loads(context.page.data))
+    link = doc.links.get(rel_uri, None)
+    assert link, 'Resource link not found: %s'% rel_uri
+    assert num_links == link.
+
     assert actual_url, "Resource 'ep:%s' not found in links %s" % (resource, doc.links.keys())
     assert expected_url == actual_url, "actual url [%s] does not match expected url [%s]" % (actual_url, expected_url)
