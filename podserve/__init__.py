@@ -1,7 +1,7 @@
 from flask import Flask
 from flask_oauthlib.provider import OAuth1Provider
 from flask.ext.security import Security
-import logging
+import logging, random
 
 __author__ = 'dwcaraway'
 __credits__ = ['Dave Caraway']
@@ -9,8 +9,6 @@ __credits__ = ['Dave Caraway']
 log = logging.getLogger(__name__)
 
 app = Flask(__name__)
-oauth = OAuth1Provider(app)
-security = Security()
 
 class DefaultConfig(object):
     MONGODB_SETTINGS = {
@@ -28,14 +26,20 @@ class DefaultConfig(object):
     SECURITY_CHANGEABLE = True
     SECURITY_RECOVERABLE = True
 
+x = 0
+
 def init_application(config_object=DefaultConfig):
     app.config.from_object(config_object)
+
+    log.debug('init_application called, config_object=%s', app.config['MONGODB_SETTINGS'])
+
+    oauth = OAuth1Provider(app)
+    security = Security()
+
     oauth.init_app(app)
 
     from podserve.model import db, User, Role
     db.init_app(app)
-
-
 
     from flask.ext.security import MongoEngineUserDatastore
     user_datastore = MongoEngineUserDatastore(db, User, Role)
@@ -45,6 +49,3 @@ def init_application(config_object=DefaultConfig):
 
     #import web to initialize the routes
     import podserve.web
-
-
-init_application()
