@@ -1,7 +1,8 @@
 flask==0.10.1
 flask_mongoengine==0.7.0
 flask-security
-py-bcrypt
+flask-principal
+python-bcrypt
 pil
 dougrain
 Flask-OAuthlib
