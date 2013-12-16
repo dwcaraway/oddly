@@ -8,6 +8,7 @@ __credits__ = ['Dave Caraway']
 
 db = MongoEngine()
 
+
 class Role(Document, RoleMixin):
     """
     A user's security role
@@ -23,7 +24,7 @@ class User(Document, UserMixin):
     """
     A user in the system
     """
-    password = StringField(max_length=255, required=True) #a hash of the user's password
+    password = StringField(max_length=255, required=True)  # a hash of the user's password
     email = EmailField(max_length=255, required=True, unique=True)
     display_name = StringField(max_length=255, required=True)
     created_at = DateTimeField(default=datetime.datetime.now, required=True)
@@ -76,7 +77,7 @@ class RequestToken(Document):
 
 class Nonce(Document):
     """
-    Timestamp and nonce is a token for preventing repeating requests. The timelife of a timestamp and nonce
+    Timestamp and nonce is a token for preventing repeating requests. The time life of a timestamp and nonce
     is 60 seconds
     """
     #TODO store in cache
@@ -86,16 +87,17 @@ class Nonce(Document):
     request_token = StringField()
     access_token = StringField()
 
+
 class AccessToken(Document):
     """
-    An access token is the final token that could be use by the client. Client will send access token everytime when it
+    An access token is the final token that could be use by the client. Client will send access token every time when it
     needs to access a resource.
     """
     client = ReferenceField(document_type='Client', required=True)
-    user = ReferenceField(document_type='User') #TODO is this required? client has the user too
-    token = StringField(required=True) #Access Token
-    secret = StringField(required=True) #Access token secret
-    realms = ListField(StringField(), default=True) # Realms with this access token
+    user = ReferenceField(document_type='User')  # TODO is this required? client has the user too
+    token = StringField(required=True)  # Access Token
+    secret = StringField(required=True)  # Access token secret
+    realms = ListField(StringField(), default=True)  # Realms with this access token
 
 
 class Organization(Document):
@@ -117,6 +119,7 @@ class Organization(Document):
 
     def __unicode__(self):
         return self.title
+
 
 class Membership(Document):
     """
@@ -140,7 +143,7 @@ class Dataset(DynamicDocument):
     added to a Dataset instance will be saved, a requirement since we don't know what version of the
     metadata schema we'll be working with or what the schema will look like in the future.
     """
-    title= StringField(required=True)
+    title = StringField(required=True)
     organization = ReferenceField(document_type='Organization', required=True)
     created_at = DateTimeField(default=datetime.datetime.now)
     created_by = ReferenceField(document_type=User, required=True)
@@ -149,12 +152,13 @@ class Dataset(DynamicDocument):
     schema = URLField(max_length=255, required=True, default="http://project-open-data.github.io/schema"
                                                              "/1_0_final/single_entry.json")
 
-    #TODO validate the dataset on insert/update
+    # TODO validate the dataset on insert/update
 
     meta = {
         'indexes': ['-created_at', 'organization'],
         'ordering': ['-created_at']
     }
+
 
 class Schema(Document):
     """
@@ -164,4 +168,4 @@ class Schema(Document):
     created_by = ReferenceField(document_type=User, required=True)
     last_modified_at = DateTimeField(default=datetime.datetime.now, required=True)
     last_modified_by = ReferenceField(document_type=User, required=True)
-    text = StringField(required=True) #the actual JSON schema text
+    text = StringField(required=True)  # the actual JSON schema text
