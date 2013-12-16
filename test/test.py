@@ -1,7 +1,7 @@
 from flask.ext.testing import TestCase
 import podserve.model as model
-from dougrain import Builder
-import random
+from dougrain import Builder, Document
+import random, json
 
 __author__ = 'dwcaraway'
 __credits__ = 'Dave Caraway'
@@ -58,6 +58,8 @@ class RootTest(BaseTestMixin):
         expected = b.as_object()
 
         response = self.client.get("/")
+        Document.from_object(json.loads(response.data))
+
         self.assertEquals(response.json, expected)
 
 
@@ -67,9 +69,9 @@ class DatasetTest(BaseTestMixin):
         self.data = populate_db()  # Create canned data, assign to 'data' property
         super(BaseTestMixin, self).setUp()
 
-    def test_get_dataset(self):
+    def test_list_datasets(self):
         """
-        Verify that datasets can be retrieved
+        Verify that all datasets can be retrieved
         """
         b = Builder('/datasets')\
             .add_link('/rel/dataset', target='/datasets/%s' % self.data['dataset2'].id)\
@@ -77,6 +79,9 @@ class DatasetTest(BaseTestMixin):
         expected = b.as_object()
 
         response = self.client.get("/datasets")
+        response_doc = Document.from_object(response.json)
+
+        log.debug("Response links %s", response_doc.links['/rel/dataset'][0].url())
 
         self.assertEquals(response.json, expected)
 
