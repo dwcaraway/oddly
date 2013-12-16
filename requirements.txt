@@ -6,3 +6,7 @@ python-bcrypt
 pil
 dougrain
 Flask-OAuthlib
+
+#Libraries for testing
+behave
+Flask-Testing

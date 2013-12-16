@@ -1,15 +1,12 @@
 import datetime
-from mongoengine.document import EmbeddedDocument
 from flask.ext.mongoengine import MongoEngine, Document, DynamicDocument
 from flask.ext.security import RoleMixin, UserMixin
-from mongoengine import StringField, EmailField, DateTimeField, ListField, ReferenceField, BooleanField, URLField,\
-    EmbeddedDocumentField
+from mongoengine import StringField, EmailField, DateTimeField, ListField, ReferenceField, BooleanField, URLField
 
 __author__ = 'dwcaraway'
 __credits__ = ['Dave Caraway']
 
 db = MongoEngine()
-
 
 class Role(Document, RoleMixin):
     """

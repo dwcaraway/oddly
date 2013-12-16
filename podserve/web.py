@@ -1,6 +1,5 @@
-from podserve import app
 import json, logging
-from flask import jsonify, Response, abort
+from flask import jsonify, Response, abort, Blueprint
 from dougrain import Builder
 from podserve.model import Dataset, User, Organization, Schema
 
@@ -20,8 +19,10 @@ log = logging.getLogger(__name__)
 #
 # relations = load_rels()
 
-@app.route('/', methods=['GET'])
-def get_api_endpoints():
+api = Blueprint('api', __name__)
+
+@api.route('/', methods=['GET'])
+def get_endpoints():
     """
     Handle API home, the starting point, which lists endpoints to navigate to
     """
@@ -34,7 +35,7 @@ def get_api_endpoints():
 
     return Response(json.dumps(o), mimetype='application/hal+json')
 
-@app.route('/datasets', methods=['GET'])
+@api.route('/datasets', methods=['GET'])
 def list_all_datasets(page=1):
     """
     Lists all Datasets
@@ -48,7 +49,7 @@ def list_all_datasets(page=1):
 
     return Response(json.dumps(o), mimetype='application/hal+json')
 
-@app.route('/datasets', methods=['POST'])
+@api.route('/datasets', methods=['POST'])
 def create_dataset():
     """
     Creates a Dataset
@@ -59,7 +60,7 @@ def create_dataset():
     #TODO implement
     return abort(501)
 
-@app.route('/datasets/{id}', methods=['GET, PUT, DELETE'])
+@api.route('/datasets/{id}', methods=['GET, PUT, DELETE'])
 def handle_datasets():
     """
     Retrieve a Dataset
@@ -68,7 +69,7 @@ def handle_datasets():
     #TODO implement
     return abort(501)
 
-@app.route('/users', methods=['GET'])
+@api.route('/users', methods=['GET'])
 def list_all_users(page=1, per_page=10):
     """
     Lists all Users
@@ -82,7 +83,7 @@ def list_all_users(page=1, per_page=10):
 
     return Response(json.dumps(o), mimetype='application/hal+json')
 
-@app.route('/users', methods=['POST'])
+@api.route('/users', methods=['POST'])
 def create_user():
     """
     Creates a user
@@ -93,7 +94,7 @@ def create_user():
     #TODO implement
     return abort(501)
 
-@app.route('/users/{id}', methods=['GET, PUT, DELETE'])
+@api.route('/users/{id}', methods=['GET, PUT, DELETE'])
 def handle_users():
     """
     Retrieve a User
@@ -102,7 +103,7 @@ def handle_users():
     #TODO implement
     return abort(501)
 
-@app.route('/organizations', methods=['GET'])
+@api.route('/organizations', methods=['GET'])
 def list_all_orgs(page=1, per_page=10):
     """
     Lists all Organizations
@@ -117,7 +118,7 @@ def list_all_orgs(page=1, per_page=10):
 
     return Response(json.dumps(o), mimetype='application/hal+json')
 
-@app.route('/organizations', methods=['POST'])
+@api.route('/organizations', methods=['POST'])
 def create_org():
     """
     Creates an organization
@@ -128,7 +129,7 @@ def create_org():
     #TODO implement
     return abort(501)
 
-@app.route('/organizations/{id}', methods=['GET, PUT, DELETE'])
+@api.route('/organizations/{id}', methods=['GET, PUT, DELETE'])
 def handle_orgs():
     """
     Retrieve an organization
@@ -137,7 +138,7 @@ def handle_orgs():
     #TODO implement
     return abort(501)
 
-@app.route('/schema', methods=['GET'])
+@api.route('/schema', methods=['GET'])
 def list_all_schema(page=1):
     """
     Handle routing of JSON schema (see json-schema.org)
@@ -145,7 +146,7 @@ def list_all_schema(page=1):
     ret =  Schema.objects.paginate(page=page, per_page=10)
     return jsonify(ret)
 
-@app.route('/schema', methods=['POST'])
+@api.route('/schema', methods=['POST'])
 def create_schema():
     """
     Creates a schema
@@ -158,7 +159,7 @@ def create_schema():
     return abort(501)
 
 
-@app.route('/schema/{id}', methods=['GET'])
+@api.route('/schema/{id}', methods=['GET'])
 def get_schema(id=None):
     """
     Handle routing of JSON schema (see json-schema.org)

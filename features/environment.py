@@ -2,16 +2,16 @@ import os
 import random
 import sys
 from flask import current_app
-from podserve import app
+
 __author__ = 'dwcaraway'
-__credits__ = ['Dave Caraway']
+__credits__ = 'Dave Caraway'
 
 # Set Path
-pwd = os.path.abspath(os.path.dirname(__file__))
-project = os.path.basename(pwd)
-new_path = pwd.strip(project)
-activate_this = os.path.join(new_path, 'itemeyes')
-sys.path.append(activate_this)
+# pwd = os.path.abspath(os.path.dirname(__file__))
+# project = os.path.basename(pwd)
+# new_path = pwd.strip(project)
+# activate_this = os.path.join(new_path, 'podserve')
+# sys.path.append(activate_this)
 
 import logging, sys
 logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
@@ -48,8 +48,8 @@ class FlaskTestClientProxy(object):
 
 
 def before_scenario(context, feature):
-    from podserve import app, init_application
-    init_application(BehaveConfig)
+    from podserve import create_app
+    app = create_app(BehaveConfig)
     app.wsgi_app = FlaskTestClientProxy(app.wsgi_app)
     context.app = app
     context.client = app.test_client()
