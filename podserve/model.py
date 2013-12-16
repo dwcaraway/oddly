@@ -103,8 +103,8 @@ class Organization(Document):
     This is a collection of datasets and users
     """
     title = StringField(max_length=255, required=True)
-    description = StringField(required=True)
-    created_at = DateTimeField(default=datetime.datetime.now, required=True)
+    description = StringField()
+    created_at = DateTimeField(default=datetime.datetime.now)
     updated_at = DateTimeField(default=datetime.datetime.now)
     logo = URLField()
     children = ListField(ReferenceField(document_type='Organization'), default=[])
@@ -140,11 +140,12 @@ class Dataset(DynamicDocument):
     added to a Dataset instance will be saved, a requirement since we don't know what version of the
     metadata schema we'll be working with or what the schema will look like in the future.
     """
+    title= StringField(required=True)
     organization = ReferenceField(document_type='Organization', required=True)
-    created_at = DateTimeField(default=datetime.datetime.now, required=True)
+    created_at = DateTimeField(default=datetime.datetime.now)
     created_by = ReferenceField(document_type=User, required=True)
-    last_modified_at = DateTimeField(default=datetime.datetime.now, required=True)
-    last_modified_by = ReferenceField(document_type=User, required=True)
+    last_modified_at = DateTimeField(default=datetime.datetime.now)
+    last_modified_by = ReferenceField(document_type=User)
     schema = URLField(max_length=255, required=True, default="http://project-open-data.github.io/schema"
                                                              "/1_0_final/single_entry.json")
 

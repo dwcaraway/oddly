@@ -1,6 +1,4 @@
-import os
 import random
-import sys
 from flask import current_app
 
 __author__ = 'dwcaraway'

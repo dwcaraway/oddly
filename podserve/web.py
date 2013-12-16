@@ -26,7 +26,7 @@ def get_endpoints():
     """
     Handle API home, the starting point, which lists endpoints to navigate to
     """
-    b = Builder('/').add_curie('ep', 'rel/{rel}')\
+    b = Builder('/').add_curie('ep', '/rel/{rel}')\
         .add_link('ep:user', '/users')\
         .add_link('ep:dataset', '/datasets')\
         .add_link('ep:organization', '/organizations')\
@@ -42,8 +42,8 @@ def list_all_datasets(page=1):
     """
     pagination = Dataset.objects.paginate(page=page, per_page=10)
     b = Builder('/datasets')
-    for dataset in pagination.iter_pages():
-        b.add_link('/rel/dataset', '/datasets/%d' % dataset.id)
+    for dataset in pagination.items:
+        b.add_link('/rel/dataset', '/datasets/%s' % dataset.id)
 
     o = b.as_object()
 
