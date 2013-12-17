@@ -65,44 +65,60 @@ class RootTest(BaseTestMixin):
 
 class DatasetTest(BaseTestMixin):
 
-    def setUp(self):
-        self.data = populate_db()  # Create canned data, assign to 'data' property
-        super(BaseTestMixin, self).setUp()
+    # def setUp(self):
+    #     super(BaseTestMixin, self).setUp()
 
     def test_list_datasets(self):
         """
         Verify that all datasets can be retrieved
         """
-        b = Builder('/datasets')\
-            .add_link('/rel/dataset', target='/datasets/%s' % self.data['dataset2'].id)\
-            .add_link('/rel/dataset', target='/datasets/%s' % self.data['dataset1'].id)
-        expected = b.as_object()
+        data = populate_db(num_datasets=2)  # Create canned data, assign to 'data' property
+
+        expected = ['/datasets/%s' % dataset.id for dataset in data['datasets']]
 
         response = self.client.get("/datasets")
         response_doc = Document.from_object(response.json)
 
-        log.debug("Response links %s", response_doc.links['/rel/dataset'][0].url())
+        hrefs = [link.url() for link in response_doc.links['/rel/dataset']]
 
-        self.assertEquals(response.json, expected)
+        self.assertEquals(set(expected)-set(hrefs), set())
+
+    def test_list_datasets_paginates(self):
+        """
+        Verify that datasets can be retrieved via pagination
+        """
+        data = populate_db(num_datasets=100)  # Create canned data, assign to 'data' property
+
+        expected = ['/datasets/%s' % dataset.id for dataset in data['datasets']]
+        assert len(expected) is 100
+
+        response = self.client.get("/datasets")
+        response_doc = Document.from_object(response.json)
+        hrefs = [link.url() for link in response_doc.links['/rel/dataset']]
+
+        while 'next' in response_doc.links.keys():
+            response = self.client.get(response_doc.links['next'].url())
+            response_doc = Document.from_object(response.json)
+            hrefs.extend([link.url() for link in response_doc.links['/rel/dataset']])
+
+        self.assertEquals(set(expected)-set(hrefs), set())
 
 
-def populate_db():
+def populate_db(num_datasets):
     """
     Populate the database with canned data
     """
-    log.debug('populate_db() called')
     user1 = model.User(password='pass', email='test@test.com', display_name='testuser1')
     user1.save()
 
     org1 = model.Organization(title='org1')
     org1.save()
 
-    dataset1 = model.Dataset(title='Dataset1', organization=org1, created_by=user1)
-    dataset1.save()
+    datasets = [model.Dataset(title='Dataset%d'% x, organization=org1, created_by=user1) for x in range(num_datasets)]
 
-    dataset2 = model.Dataset(title='Dataset2', organization=org1, created_by=user1)
-    dataset2.save()
+    for dataset in datasets:
+        dataset.save()
 
-    return dict(user1=user1, dataset1=dataset1, dataset2=dataset2)
+    return dict(users=[user1], datasets=datasets)
 
 

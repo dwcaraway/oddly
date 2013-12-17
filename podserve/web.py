@@ -1,5 +1,5 @@
 import json, logging
-from flask import jsonify, Response, abort, Blueprint
+from flask import jsonify, Response, abort, Blueprint, request
 from dougrain import Builder
 from podserve.model import Dataset, User, Organization, Schema
 
@@ -36,14 +36,23 @@ def get_endpoints():
     return Response(json.dumps(o), mimetype='application/hal+json')
 
 @api.route('/datasets', methods=['GET'])
-def list_all_datasets(page=1):
+def list_all_datasets():
     """
     Lists all Datasets
     """
+    page = int(request.args.get('page', '1'))
+
     pagination = Dataset.objects.paginate(page=page, per_page=10)
     b = Builder('/datasets')
+
     for dataset in pagination.items:
         b.add_link('/rel/dataset', '/datasets/%s' % dataset.id)
+
+    if pagination.has_prev:
+        b.add_link('prev', '/datasets?page=%d'%pagination.prev_num)
+
+    if pagination.has_next:
+        b.add_link('next', '/datasets?page=%d'%pagination.next_num)
 
     o = b.as_object()
 
