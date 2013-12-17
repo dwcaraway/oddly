@@ -1,4 +1,5 @@
-import json, logging
+import json,logging, urlparse
+from urllib import urlencode
 from flask import jsonify, Response, abort, Blueprint, request
 from dougrain import Builder
 from podserve.model import Dataset, User, Organization, Schema
@@ -42,8 +43,10 @@ def list_all_datasets():
     """
     page = int(request.args.get('page', '1'))
 
+    # log.debug("reconstructed_url=%s", urlparse.urljoin(request.endpoint, '?'+urlencode(request.args)))
+
     pagination = Dataset.objects.paginate(page=page, per_page=10)
-    b = Builder('/datasets')
+    b = Builder('/datasets').add_link('home', '/')
 
     for dataset in pagination.items:
         b.add_link('/rel/dataset', '/datasets/%s' % dataset.id)
