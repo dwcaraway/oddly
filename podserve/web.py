@@ -28,38 +28,32 @@ def index():
     Handle API home, the starting point, which lists endpoints to navigate to
     """
     b = Builder(request.url).add_curie('ep', '/rel/{rel}')\
-        .add_link('ep:user', '/users')\
-        .add_link('ep:dataset', '/datasets')\
-        .add_link('ep:organization', '/organizations')\
-        .add_link('ep:schema', '/schema')
+        .add_link('ep:user', url_for('.list_all_users'))\
+        .add_link('ep:dataset', url_for('.list_datasets'))\
+        .add_link('ep:organization', url_for('.list_all_orgs'))\
+        .add_link('ep:schema', url_for('.list_all_schema'))
     o = b.as_object()
-
-    print "request.path = %s" % request.path
-    print "request.full_path = %s" % request.full_path
-    print "request.url = %s" % request.url
 
     return Response(json.dumps(o), mimetype='application/hal+json')
 
 @api.route('/datasets', methods=['GET'])
-def list_all_datasets():
+def list_datasets():
     """
     Lists all Datasets
     """
     page = int(request.args.get('page', '1'))
 
-    # log.debug("reconstructed_url=%s", urlparse.urljoin(request.endpoint, '?'+urlencode(request.args)))
-
     pagination = Dataset.objects.paginate(page=page, per_page=10)
-    b = Builder(request.url).add_link('home', '/')
+    b = Builder(request.url).add_link('home', url_for('.index'))
 
     for dataset in pagination.items:
-        b.add_link('/rel/dataset', '/datasets/%s' % dataset.id)
+        b.add_link('/rel/dataset', url_for('.get_dataset', id=dataset.id))
 
     if pagination.has_prev:
-        b.add_link('prev', '/datasets?page=%d'%pagination.prev_num)
+        b.add_link('prev', url_for('.list_datasets', page=pagination.prev_num))
 
     if pagination.has_next:
-        b.add_link('next', '/datasets?page=%d'%pagination.next_num)
+        b.add_link('next', url_for('.list_datasets', page=pagination.next_num))
 
     o = b.as_object()
 
@@ -81,8 +75,8 @@ def create_dataset():
     #TODO implement
     return abort(501)
 
-@api.route('/datasets/{id}', methods=['GET, PUT, DELETE'])
-def handle_datasets():
+@api.route('/datasets/<id>', methods=['GET, PUT, DELETE'])
+def get_dataset(id=None):
     """
     Retrieve a Dataset
     """
@@ -96,6 +90,7 @@ def list_all_users(page=1, per_page=10):
     Lists all Users
     """
     pagination = User.objects.paginate(page=page, per_page=per_page)
+
     b = Builder(request.url)
     for dataset in pagination.iter_pages():
         b.add_link('/rel/user', '/users/%d' % dataset.id)
@@ -116,7 +111,7 @@ def create_user():
     return abort(501)
 
 @api.route('/users/{id}', methods=['GET, PUT, DELETE'])
-def handle_users():
+def get_users():
     """
     Retrieve a User
     """
@@ -151,7 +146,7 @@ def create_org():
     return abort(501)
 
 @api.route('/organizations/{id}', methods=['GET, PUT, DELETE'])
-def handle_orgs():
+def get_org():
     """
     Retrieve an organization
     """
