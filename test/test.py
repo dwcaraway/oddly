@@ -87,7 +87,7 @@ class DatasetTest(BaseTestMixin):
         """
         Verify that datasets can be retrieved via pagination
         """
-        data = populate_db(num_datasets=100)  # Create canned data, assign to 'data' property
+        data = populate_db(num_datasets=100)  # Create canned data
 
         expected = ['/datasets/%s' % dataset.id for dataset in data['datasets']]
         assert len(expected) is 100
@@ -102,6 +102,42 @@ class DatasetTest(BaseTestMixin):
             hrefs.extend([link.url() for link in response_doc.links['/rel/dataset']])
 
         self.assertEquals(set(expected)-set(hrefs), set())
+
+    def test_list_datasets_references_self(self):
+        """
+        Verify that when we list datasets and paginate over them, that we by default store a
+        url reference to self - the EXACT url used to access the dataset
+        """
+        data = populate_db(num_datasets=50)  # Create canned data
+
+        # Start at /datasets
+        response = self.client.get("/datasets")
+        response_doc = Document.from_object(response.json)
+
+        # Select the next list of results
+        next_url = response_doc.links['next'].url()
+
+        response = self.client.get(next_url)
+        response_doc = Document.from_object(response.json)
+
+        # We expect that 'next' link in the first results should equal 'self' link in next list of results
+        self.assertEquals(response_doc.links['self'], next_url)
+
+
+    def test_create_dataset(self):
+        """
+        Verify that a POST to /datasets will create a new dataset
+        """
+        # headers = [('Content-Type', 'application/json')]
+        # data = {'test':'something'}
+        # json_data = json.dumps(data)
+        # json_data_length = len(json_data)
+        # headers.append(('Content-Length', json_data_length))
+        #
+        # self.client.post('/datasets', headers, data=json_data)
+
+
+        self.assertTrue(False, "Not implemented yet")
 
 
 def populate_db(num_datasets):

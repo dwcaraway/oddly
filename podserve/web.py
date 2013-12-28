@@ -1,6 +1,6 @@
 import json,logging, urlparse
 from urllib import urlencode
-from flask import jsonify, Response, abort, Blueprint, request
+from flask import jsonify, Response, abort, Blueprint, request, url_for
 from dougrain import Builder
 from podserve.model import Dataset, User, Organization, Schema
 
@@ -23,16 +23,20 @@ log = logging.getLogger(__name__)
 api = Blueprint('api', __name__)
 
 @api.route('/', methods=['GET'])
-def get_endpoints():
+def index():
     """
     Handle API home, the starting point, which lists endpoints to navigate to
     """
-    b = Builder('/').add_curie('ep', '/rel/{rel}')\
+    b = Builder(request.url).add_curie('ep', '/rel/{rel}')\
         .add_link('ep:user', '/users')\
         .add_link('ep:dataset', '/datasets')\
         .add_link('ep:organization', '/organizations')\
         .add_link('ep:schema', '/schema')
     o = b.as_object()
+
+    print "request.path = %s" % request.path
+    print "request.full_path = %s" % request.full_path
+    print "request.url = %s" % request.url
 
     return Response(json.dumps(o), mimetype='application/hal+json')
 
@@ -46,7 +50,7 @@ def list_all_datasets():
     # log.debug("reconstructed_url=%s", urlparse.urljoin(request.endpoint, '?'+urlencode(request.args)))
 
     pagination = Dataset.objects.paginate(page=page, per_page=10)
-    b = Builder('/datasets').add_link('home', '/')
+    b = Builder(request.url).add_link('home', '/')
 
     for dataset in pagination.items:
         b.add_link('/rel/dataset', '/datasets/%s' % dataset.id)
@@ -66,8 +70,13 @@ def create_dataset():
     """
     Creates a Dataset
     """
+
+    print("Request JSON = %s" % request.get_json())
+
     dataset = Dataset()
-    b = Builder('/datasets').add_link('/rel/dataset', '/datasets/%d' % dataset.id)
+    dataset.save()
+
+    b = Builder(request.url).add_link('/rel/dataset', '/datasets/%d' % dataset.id)
 
     #TODO implement
     return abort(501)
@@ -87,7 +96,7 @@ def list_all_users(page=1, per_page=10):
     Lists all Users
     """
     pagination = User.objects.paginate(page=page, per_page=per_page)
-    b = Builder('/users')
+    b = Builder(request.url)
     for dataset in pagination.iter_pages():
         b.add_link('/rel/user', '/users/%d' % dataset.id)
 
@@ -101,7 +110,7 @@ def create_user():
     Creates a user
     """
     dataset = User()
-    b = Builder('/users').add_link('/rel/user', '/users/%d' % dataset.id)
+    b = Builder(request.url).add_link('/rel/user', '/users/%d' % dataset.id)
 
     #TODO implement
     return abort(501)
@@ -122,7 +131,7 @@ def list_all_orgs(page=1, per_page=10):
     """
     pagination = Organization.objects.paginate(page=int(page), per_page=per_page)
 
-    b = Builder('/organizations')
+    b = Builder(request.url)
     for org in pagination.items:
         b.add_link('/rel/organization', '/organizations/%s' % org.id)
 
@@ -136,7 +145,7 @@ def create_org():
     Creates an organization
     """
     dataset = Organization()
-    b = Builder('/organizations').add_link('/rel/organization', '/organizations/%d' % dataset.id)
+    b = Builder(request.url).add_link('/rel/organization', '/organizations/%d' % dataset.id)
 
     #TODO implement
     return abort(501)
@@ -155,7 +164,7 @@ def list_all_schema(page=1):
     """
     Handle routing of JSON schema (see json-schema.org)
     """
-    ret =  Schema.objects.paginate(page=page, per_page=10)
+    ret = Schema.objects.paginate(page=page, per_page=10)
     return jsonify(ret)
 
 @api.route('/schema', methods=['POST'])
@@ -165,7 +174,7 @@ def create_schema():
     """
     schema = Schema()
     schema.save()
-    b = Builder('/schema').add_link('/rel/schema', '/schema/%d' % schema.id)
+    b = Builder(request.url).add_link('/rel/schema', '/schema/%d' % schema.id)
 
     #TODO implement
     return abort(501)
@@ -176,6 +185,6 @@ def get_schema(id=None):
     """
     Handle routing of JSON schema (see json-schema.org)
     """
-    ret =  Schema.objects.get_or_404(_id=id)
+    ret = Schema.objects.get_or_404(_id=id)
     return jsonify(ret)
 
