@@ -1,7 +1,7 @@
 import json,logging, urlparse
 from urllib import urlencode
 from flask import jsonify, Response, abort, Blueprint, request, url_for, make_response
-from dougrain import Builder
+from dougrain import Builder, Document
 from podserve.model import Dataset, User, Organization, Schema
 from bson import ObjectId
 
@@ -88,15 +88,28 @@ def create_dataset():
 
     return response
 
-@api.route('/datasets/<id>', methods=['GET, PUT, DELETE'])
+@api.route('/datasets/<id>', methods=['GET', 'PUT', 'DELETE'])
 def get_dataset(id):
     """
     Retrieve a Dataset
     """
 
-    Dataset.objects.get_or_404(ObjectId(id))
+    #TODO cleanup the garbage in the JSON response (e.g. extra fields, strict date/object references)
 
-    return abort(501)
+    dataset = Dataset.objects.get_or_404(id=ObjectId(id))
+    dataset_str = dataset.to_json()
+
+    d = Document.from_object(json.loads(dataset_str))
+    d.add_link('self', request.url)
+    d.set_curie('ds', '/rel/{rel}')
+    d.add_link('home', url_for('.index'))
+    d.add_link('ds:datasets', url_for('.list_datasets'))
+
+    # For references, add links
+    d.add_link('ds:organization', url_for('.get_org', id=dataset.organization.id))
+    d.add_link('ds:created_by', url_for('.get_user', id=dataset.created_by.id))
+
+    return Response(json.dumps(d.as_object()), mimetype='application/hal+json')
 
 
 @api.route('/users', methods=['GET'])
@@ -126,7 +139,7 @@ def create_user():
     return abort(501)
 
 @api.route('/users/{id}', methods=['GET, PUT, DELETE'])
-def get_users():
+def get_user():
     """
     Retrieve a User
     """

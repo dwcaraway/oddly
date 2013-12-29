@@ -146,6 +146,30 @@ class DatasetTest(BaseTestMixin):
         self.assertEquals(201, response.status_code)
         self.assertIsNotNone(response.headers['Location'])
 
+        #Verify the Location is valid by getting it and comparing to expected
+        response = self.client.get(response.headers['Location'])
+        response_doc = Document.from_object(response.json)
+
+        self.assertEquals('footest', response_doc.properties['title'])
+
+    def test_get_dataset(self):
+        """
+        Verify that we can GET an individual dataset
+        """
+        data = populate_db(num_datasets=5)
+
+        test_data = data['datasets'][0]
+
+        response = self.client.get("/datasets/%s" % test_data.id)
+        print response
+        print response.json
+
+        response_doc = Document.from_object(response.json)
+
+        self.assertEquals(test_data.title, response_doc.properties['title'])
+
+        self.assertEquals(200, response.status_code)
+
 def populate_db(num_datasets=0):
     """
     Populate the database with canned data
