@@ -40,6 +40,8 @@ def index():
 
     return Response(json.dumps(o), mimetype='application/hal+json')
 
+# ------------------- DATASETS --------------------------------------
+
 @api.route('/datasets', methods=['GET'])
 def list_datasets():
     """
@@ -141,18 +143,30 @@ def delete_dataset(id):
 
     return Response(200, mimetype='text/plain')
 
+# ------------------- USERS --------------------------------------
+
 @api.route('/users', methods=['GET'])
-def list_all_users(page=1, per_page=10):
+def list_users():
     """
-    Lists all Users
+    Lists Users
     """
-    pagination = User.objects.paginate(page=page, per_page=per_page)
+    #TODO check permissions -- must be admin
+    #TODO support queries
 
-    b = Builder(request.url)
-    for dataset in pagination.iter_pages():
-        b.add_link('/rel/user', '/users/%d' % dataset.id)
+    page = int(request.args.get('page', '1'))
 
-    o = b.as_object()
+    pagination = User.objects.paginate(page=page, per_page=10)
+
+    b = Builder(request.url).add_link('home', url_for('.index'))
+
+    for user in pagination.items:
+        b.add_link('/rel/user', url_for('.get_user', id=user.id))
+
+    if pagination.has_prev:
+        b.add_link('prev', url_for('.list_users', page=pagination.prev_num))
+
+    if pagination.has_next:
+        b.add_link('next', url_for('.list_users', page=pagination.next_num))
 
     return Response(json.dumps(o), mimetype='application/hal+json')
 
@@ -161,20 +175,75 @@ def create_user():
     """
     Creates a user
     """
-    dataset = User()
-    b = Builder(request.url).add_link('/rel/user', '/users/%d' % dataset.id)
+    #TODO require authentication -- must be admin
+    #TODO verify that user has authority to create datasets for an organization
 
-    #TODO implement
-    return abort(501)
+    data = request.get_json()
 
-@api.route('/users/{id}', methods=['GET, PUT, DELETE'])
-def get_user():
+    user = User(password=data['password'],
+                email=data['email'],
+                display_name=data['display_name']
+    )
+    user.save()
+
+    response = Response(headers={'Location': url_for('.get_user', id=user.id), 'Content-Type':'text/plain'})
+    response.status_code = 201
+
+    return response
+
+@api.route('/users/<id>', methods=['GET'])
+def get_user(id):
     """
     Retrieve a User
     """
 
-    #TODO implement
-    return abort(501)
+    #TODO cleanup the garbage in the JSON response (e.g. extra fields, strict date/object references)
+
+    user = User.objects.get_or_404(id=ObjectId(id))
+    user_str = user.to_json()
+
+    d = Document.from_object(json.loads(user_str))
+    d.add_link('self', request.url)
+    d.set_curie('us', '/rel/{rel}')
+    d.add_link('home', url_for('.index'))
+    d.add_link('us:users', url_for('.list_userss'))
+
+    return Response(json.dumps(d.as_object()), mimetype='application/hal+json')
+
+@api.route('/users/<id>', methods=['PUT'])
+def update_user(id):
+    """
+    Update a user.
+    """
+    #TODO check permissions
+
+    user = User.objects.get_or_404(id=ObjectId(id))
+
+    request_dict = request.json
+
+    #TODO need to grab all attributes that should be updated
+    user.email = request_dict['email']
+    user.display_name = request_dict['display_name']
+    user.password = request_dict['password']
+    user.save()
+
+    return Response(200, mimetype='text/plain')
+
+
+@api.route('/users/<id>', methods=['DELETE'])
+def delete_user(id):
+    """
+    Deletes a user.
+    """
+    #TODO check permissions
+
+    user = User.objects.get_or_404(id=ObjectId(id))
+    user.delete()
+
+    return Response(200, mimetype='text/plain')
+
+
+# ------------------- ORGANIZATIONS --------------------------------------
 
 @api.route('/organizations', methods=['GET'])
 def list_all_orgs(page=1, per_page=10):
@@ -210,6 +279,8 @@ def get_org():
 
     #TODO implement
     return abort(501)
+
+# ------------------- SCHEMA --------------------------------------
 
 @api.route('/schema', methods=['GET'])
 def list_all_schema(page=1):
