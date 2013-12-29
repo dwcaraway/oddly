@@ -50,7 +50,7 @@ class RootTest(BaseTestMixin):
         """
         Verify that root links to the available endpoints
         """
-        b = Builder('/').add_curie(name='ep', href='/rel/{rel}')\
+        b = Builder('http://localhost/').add_curie(name='ep', href='/rel/{rel}')\
             .add_link('ep:user', target='/users')\
             .add_link('ep:dataset', target='/datasets')\
             .add_link('ep:organization', target='/organizations')\
@@ -121,7 +121,7 @@ class DatasetTest(BaseTestMixin):
         response_doc = Document.from_object(response.json)
 
         # We expect that 'next' link in the first results should equal 'self' link in next list of results
-        self.assertEquals(response_doc.links['self'], next_url)
+        self.assertEquals(response_doc.links['self'].url(), 'http://localhost%s'%next_url)
 
 
     def test_create_dataset(self):

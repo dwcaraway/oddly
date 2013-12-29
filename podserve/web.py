@@ -39,7 +39,7 @@ def index():
 @api.route('/datasets', methods=['GET'])
 def list_datasets():
     """
-    Lists all Datasets
+    Lists datasets
     """
     page = int(request.args.get('page', '1'))
 
