@@ -154,21 +154,49 @@ class DatasetTest(BaseTestMixin):
 
     def test_get_dataset(self):
         """
-        Verify that we can GET an individual dataset
+        Verify ability to GET an individual dataset
         """
         data = populate_db(num_datasets=5)
 
         test_data = data['datasets'][0]
 
         response = self.client.get("/datasets/%s" % test_data.id)
-        print response
-        print response.json
-
         response_doc = Document.from_object(response.json)
 
         self.assertEquals(test_data.title, response_doc.properties['title'])
 
         self.assertEquals(200, response.status_code)
+
+    def test_update_dataset(self):
+        """
+        Verify ability to PUT an individual dataset
+        """
+        data = populate_db(num_datasets=5)
+
+        test_data = data['datasets'][0]
+
+        request_body = dict(
+            organization=str(test_data.organization.id),
+            created_by=str(test_data.created_by.id),
+            title='test_update_dataset_title'
+            )
+
+        response = self.client.put('/datasets/%s' % test_data.id, data=json.dumps(request_body), content_type='application/json',
+            environ_base={
+                'HTTP_USER_AGENT': 'Chrome',
+                'REMOTE_ADDR': '127.0.0.1'
+            })
+
+        test_data = model.Dataset.objects.get_or_404(id=test_data.id)
+
+        #Verify that the update happened
+        self.assertEquals(200, response.status_code)
+        self.assertEquals(request_body['title'], test_data.title)
+
+    def test_delete_dataset(self):
+        """
+        Verify
+        """
 
 def populate_db(num_datasets=0):
     """

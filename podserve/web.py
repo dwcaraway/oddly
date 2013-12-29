@@ -88,7 +88,7 @@ def create_dataset():
 
     return response
 
-@api.route('/datasets/<id>', methods=['GET', 'PUT', 'DELETE'])
+@api.route('/datasets/<id>', methods=['GET'])
 def get_dataset(id):
     """
     Retrieve a Dataset
@@ -111,6 +111,35 @@ def get_dataset(id):
 
     return Response(json.dumps(d.as_object()), mimetype='application/hal+json')
 
+@api.route('/datasets/<id>', methods=['PUT'])
+def update_dataset(id):
+    """
+    Update a dataset.
+    """
+    #TODO check permissions
+
+    dataset = Dataset.objects.get_or_404(id=ObjectId(id))
+
+    request_dict = request.json
+
+    #TODO need to grab all attributes that should be updated
+    dataset.title = request_dict['title']
+    dataset.save()
+
+    return Response(200, mimetype='text/plain')
+
+
+@api.route('/datasets/<id>', methods=['DELETE'])
+def delete_dataset(id):
+    """
+    Deletes a dataset.
+    """
+    #TODO check permissions
+
+    dataset = Dataset.objects.get_or_404(id=ObjectId(id))
+    dataset.delete()
+
+    return 200
 
 @api.route('/users', methods=['GET'])
 def list_all_users(page=1, per_page=10):
