@@ -34,7 +34,7 @@ def index():
     b = Builder(request.url).add_curie('ep', '/rel/{rel}')\
         .add_link('ep:user', url_for('.list_users'))\
         .add_link('ep:dataset', url_for('.list_datasets'))\
-        .add_link('ep:organization', url_for('.list_all_orgs'))\
+        .add_link('ep:organization', url_for('.list_orgs'))\
         .add_link('ep:schema', url_for('.list_all_schema'))
     o = b.as_object()
 
@@ -248,15 +248,27 @@ def delete_user(id):
 # ------------------- ORGANIZATIONS --------------------------------------
 
 @api.route('/organizations', methods=['GET'])
-def list_all_orgs(page=1, per_page=10):
+def list_orgs():
     """
-    Lists all Organizations
+    Lists Organizations
     """
-    pagination = Organization.objects.paginate(page=int(page), per_page=per_page)
+    #TODO check permissions
+    #TODO support queries
 
-    b = Builder(request.url)
-    for org in pagination.items:
-        b.add_link('/rel/organization', '/organizations/%s' % org.id)
+    page = int(request.args.get('page', '1'))
+
+    pagination = Organization.objects.paginate(page=page, per_page=10)
+
+    b = Builder(request.url).add_link('home', url_for('.index'))
+
+    for user in pagination.items:
+        b.add_link('/rel/organization', url_for('.get_org', id=user.id))
+
+    if pagination.has_prev:
+        b.add_link('prev', url_for('.list_orgs', page=pagination.prev_num))
+
+    if pagination.has_next:
+        b.add_link('next', url_for('.list_orgs', page=pagination.next_num))
 
     o = b.as_object()
 
@@ -267,20 +279,67 @@ def create_org():
     """
     Creates an organization
     """
-    dataset = Organization()
-    b = Builder(request.url).add_link('/rel/organization', '/organizations/%d' % dataset.id)
+    #TODO require authentication -- must be admin
+    #TODO verify that user has authority to create datasets for an organization
 
-    #TODO implement
-    return abort(501)
+    data = request.get_json()
 
-@api.route('/organizations/{id}', methods=['GET, PUT, DELETE'])
-def get_org():
+    org = Organization(title=data['title'])
+    org.save()
+
+    response = Response(headers={'Location': url_for('.get_org', id=org.id), 'Content-Type':'text/plain'})
+    response.status_code = 201
+
+    return response
+
+@api.route('/organizations/<id>', methods=['GET'])
+def get_org(id):
     """
     Retrieve an organization
     """
 
-    #TODO implement
-    return abort(501)
+    #TODO cleanup the garbage in the JSON response (e.g. extra fields, strict date/object references)
+
+    org = Organization.objects.get_or_404(id=ObjectId(id))
+    org_str = org.to_json()
+
+    d = Document.from_object(json.loads(org_str))
+    d.add_link('self', request.url)
+    d.set_curie('og', '/rel/{rel}')
+    d.add_link('home', url_for('.index'))
+    d.add_link('og:organization', url_for('.list_orgs'))
+
+    return Response(json.dumps(d.as_object()), mimetype='application/hal+json')
+
+@api.route('/organizations/<id>', methods=['PUT'])
+def update_org(id):
+    """
+    Update an organization.
+    """
+    #TODO check permissions
+
+    org = Organization.objects.get_or_404(id=ObjectId(id))
+
+    request_dict = request.json
+
+    #TODO need to grab all attributes that should be updated
+    org.title = request_dict['title']
+    org.save()
+
+    return Response(200, mimetype='text/plain')
+
+@api.route('/organizations/<id>', methods=['DELETE'])
+def delete_org(id):
+    """
+    Deletes an organization.
+    """
+    #TODO check permissions
+    #TODO reassign all datasets of organization to another organization
+
+    org = Organization.objects.get_or_404(id=ObjectId(id))
+    org.delete()
+
+    return Response(200, mimetype='text/plain')
 
 # ------------------- SCHEMA --------------------------------------
 
