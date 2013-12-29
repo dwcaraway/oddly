@@ -143,7 +143,8 @@ class DatasetTest(BaseTestMixin):
                 'REMOTE_ADDR': '127.0.0.1'
             })
 
-        print response
+        self.assertEquals(201, response.status_code)
+        self.assertIsNotNone(response.headers['Location'])
 
 def populate_db(num_datasets=0):
     """

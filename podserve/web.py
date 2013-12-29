@@ -89,13 +89,15 @@ def create_dataset():
     return response
 
 @api.route('/datasets/<id>', methods=['GET, PUT, DELETE'])
-def get_dataset(id=None):
+def get_dataset(id):
     """
     Retrieve a Dataset
     """
 
-    #TODO implement
+    Dataset.objects.get_or_404(ObjectId(id))
+
     return abort(501)
+
 
 @api.route('/users', methods=['GET'])
 def list_all_users(page=1, per_page=10):
