@@ -215,25 +215,150 @@ class DatasetTest(BaseTestMixin):
         #Now we get an error raised because document was deleted
         self.assertRaises(DoesNotExist, query_for_testdata)
 
-def populate_db(num_datasets=0):
+class UserTest(BaseTestMixin):
+
+    # def setUp(self):
+    #     super(BaseTestMixin, self).setUp()
+
+    def test_list_users(self):
+        """
+        Verify that all users can be retrieved
+        """
+        data = populate_db(num_users=5, num_datasets=0)  # Create canned data, assign to 'data' property
+
+        expected = ['/users/%s' % user.id for user in data['users']]
+
+        response = self.client.get("/users")
+        response_doc = Document.from_object(response.json)
+
+        hrefs = [link.url() for link in response_doc.links['/rel/user']]
+
+        self.assertEquals(set(expected)-set(hrefs), set())
+
+    def test_list_users_paginates(self):
+        """
+        Verify that user can be retrieved via pagination
+        """
+        data = populate_db(num_users=100, num_datasets=0)  # Create canned data
+
+        expected = ['/users/%s' % user.id for user in data['users']]
+        assert len(expected) is 100
+
+        response = self.client.get("/users")
+        response_doc = Document.from_object(response.json)
+        hrefs = [link.url() for link in response_doc.links['/rel/user']]
+
+        while 'next' in response_doc.links.keys():
+            response = self.client.get(response_doc.links['next'].url())
+            response_doc = Document.from_object(response.json)
+            hrefs.extend([link.url() for link in response_doc.links['/rel/user']])
+
+        self.assertEquals(set(expected)-set(hrefs), set())
+
+    def test_create_user(self):
+        """
+        Verify that a POST to /users will create a new user
+        """
+        response = self.client.post('/users', data=json.dumps({
+                'display_name': 'jim',
+                'email': 'jim@test.com',
+                'password':'password'
+            }), content_type='application/json',
+            environ_base={
+                'HTTP_USER_AGENT': 'Chrome',
+                'REMOTE_ADDR': '127.0.0.1'
+            })
+
+        self.assertEquals(201, response.status_code)
+        self.assertIsNotNone(response.headers['Location'])
+
+        #Verify the Location is valid by getting it and comparing to expected
+        response = self.client.get(response.headers['Location'])
+        response_doc = Document.from_object(response.json)
+
+        self.assertEquals('jim@test.com', response_doc.properties['email'])
+
+    def test_get_user(self):
+        """
+        Verify ability to GET an individual user
+        """
+        data = populate_db(num_users=100)
+
+        test_data = data['users'][0]
+
+        response = self.client.get("/users/%s" % test_data.id)
+        response_doc = Document.from_object(response.json)
+
+        self.assertEquals(test_data.email, response_doc.properties['email'])
+
+        self.assertEquals(200, response.status_code)
+
+    def test_update_user(self):
+        """
+        Verify ability to PUT an individual user
+        """
+        data = populate_db(num_users=5)
+
+        test_data = data['users'][0]
+
+        request_body = dict(
+            display_name='updated_display',
+            email='updated@email.com',
+            password='password'
+            )
+
+        response = self.client.put('/users/%s' % test_data.id, data=json.dumps(request_body), content_type='application/json',
+            environ_base={
+                'HTTP_USER_AGENT': 'Chrome',
+                'REMOTE_ADDR': '127.0.0.1'
+            })
+
+        test_data = model.User.objects.get_or_404(id=test_data.id)
+
+        #Verify that the update happened
+        self.assertEquals(200, response.status_code)
+        self.assertEquals(request_body['display_name'], test_data.display_name)
+
+    def test_delete_user(self):
+        """
+        Verify ability to DELETE a user
+        """
+        data = populate_db(num_users=10)
+
+        test_data = data['users'][0]
+
+        def query_for_testdata():
+            return model.User.objects.get(id=test_data.id)
+
+        #verify that we initially get a result from the db
+        self.assertIsNotNone(query_for_testdata())
+
+        response = self.client.delete('/users/%s' % test_data.id)
+
+        self.assertEquals(200, response.status_code)
+
+        #Now we get an error raised because document was deleted
+        self.assertRaises(DoesNotExist, query_for_testdata)
+
+
+
+
+def populate_db(num_users=1, num_orgs=1, num_datasets=0):
     """
     Populate the database with canned data
     """
-    user1 = model.User(password='pass', email='test@test.com', display_name='testuser1')
-    user1.save()
+    users = [model.User(password='pass', email='test%s@test.com'%x, display_name='testuser%s'%x) for x in range(num_users)]
+    users = model.User.objects.insert(users)
 
-    org1 = model.Organization(title='org1')
-    org1.save()
+    orgs = [model.Organization(title='org%s'%x) for x in range(num_orgs)]
+    orgs = model.Organization.objects.insert(orgs)
 
-    data = dict(users=[user1], orgs=[org1])
+    data = dict(users=users, orgs=orgs)
 
     if num_datasets:
-        datasets = [model.Dataset(title='Dataset%d'% x, organization=org1, created_by=user1) for x in range(num_datasets)]
+        datasets = [model.Dataset(title='Dataset%d'% x, organization=orgs[0], created_by=users[0]) for x in range(num_datasets)]
 
-        for dataset in datasets:
-            dataset.save()
-
-        data['datasets']=datasets
+        data['datasets']=model.Dataset.objects.insert(datasets)
 
     return data
 

@@ -32,7 +32,7 @@ def index():
     #TODO /rel should be found using url_for call
 
     b = Builder(request.url).add_curie('ep', '/rel/{rel}')\
-        .add_link('ep:user', url_for('.list_all_users'))\
+        .add_link('ep:user', url_for('.list_users'))\
         .add_link('ep:dataset', url_for('.list_datasets'))\
         .add_link('ep:organization', url_for('.list_all_orgs'))\
         .add_link('ep:schema', url_for('.list_all_schema'))
@@ -168,6 +168,8 @@ def list_users():
     if pagination.has_next:
         b.add_link('next', url_for('.list_users', page=pagination.next_num))
 
+    o = b.as_object()
+
     return Response(json.dumps(o), mimetype='application/hal+json')
 
 @api.route('/users', methods=['POST'])
@@ -206,7 +208,7 @@ def get_user(id):
     d.add_link('self', request.url)
     d.set_curie('us', '/rel/{rel}')
     d.add_link('home', url_for('.index'))
-    d.add_link('us:users', url_for('.list_userss'))
+    d.add_link('us:users', url_for('.list_users'))
 
     return Response(json.dumps(d.as_object()), mimetype='application/hal+json')
 
