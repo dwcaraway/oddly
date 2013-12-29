@@ -139,7 +139,7 @@ def delete_dataset(id):
     dataset = Dataset.objects.get_or_404(id=ObjectId(id))
     dataset.delete()
 
-    return 200
+    return Response(200, mimetype='text/plain')
 
 @api.route('/users', methods=['GET'])
 def list_all_users(page=1, per_page=10):

@@ -1,6 +1,7 @@
 from flask.ext.testing import TestCase
 import podserve.model as model
 from dougrain import Builder, Document
+from mongoengine import DoesNotExist
 import random, json
 
 __author__ = 'dwcaraway'
@@ -195,8 +196,24 @@ class DatasetTest(BaseTestMixin):
 
     def test_delete_dataset(self):
         """
-        Verify
+        Verify ability to DELETE a dataset
         """
+        data = populate_db(num_datasets=1)
+
+        test_data = data['datasets'][0]
+
+        def query_for_testdata():
+            return model.Dataset.objects.get(id=test_data.id)
+
+        #verify that we initially get a result from the db
+        self.assertIsNotNone(query_for_testdata())
+
+        response = self.client.delete('/datasets/%s' % test_data.id)
+
+        self.assertEquals(200, response.status_code)
+
+        #Now we get an error raised because document was deleted
+        self.assertRaises(DoesNotExist, query_for_testdata)
 
 def populate_db(num_datasets=0):
     """
