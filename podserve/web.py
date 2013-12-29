@@ -1,8 +1,9 @@
 import json,logging, urlparse
 from urllib import urlencode
-from flask import jsonify, Response, abort, Blueprint, request, url_for
+from flask import jsonify, Response, abort, Blueprint, request, url_for, make_response
 from dougrain import Builder
 from podserve.model import Dataset, User, Organization, Schema
+from bson import ObjectId
 
 __author__ = 'dwcaraway'
 __credits__ = ['Dave Caraway']
@@ -27,6 +28,9 @@ def index():
     """
     Handle API home, the starting point, which lists endpoints to navigate to
     """
+
+    #TODO /rel should be found using url_for call
+
     b = Builder(request.url).add_curie('ep', '/rel/{rel}')\
         .add_link('ep:user', url_for('.list_all_users'))\
         .add_link('ep:dataset', url_for('.list_datasets'))\
@@ -64,16 +68,25 @@ def create_dataset():
     """
     Creates a Dataset
     """
+    #TODO require authentication
+    #TODO don't have created_by passed in
+    #TODO verify that user has authority to create datasets for an organization
 
-    print("Request JSON = %s" % request.get_json())
+    data = request.get_json()
 
-    dataset = Dataset()
+    user = User.objects.get_or_404(id=ObjectId(data['created_by']))
+    org = Organization.objects.get_or_404(id=ObjectId(data['organization']))
+
+    dataset = Dataset(
+        title=data['title'],
+        organization=org,
+        created_by=user)
     dataset.save()
 
-    b = Builder(request.url).add_link('/rel/dataset', '/datasets/%d' % dataset.id)
+    response = Response(headers={'Location': url_for('.get_dataset', id=dataset.id), 'Content-Type':'text/plain'})
+    response.status_code = 201
 
-    #TODO implement
-    return abort(501)
+    return response
 
 @api.route('/datasets/<id>', methods=['GET, PUT, DELETE'])
 def get_dataset(id=None):

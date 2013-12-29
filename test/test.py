@@ -121,26 +121,31 @@ class DatasetTest(BaseTestMixin):
         response_doc = Document.from_object(response.json)
 
         # We expect that 'next' link in the first results should equal 'self' link in next list of results
-        self.assertEquals(response_doc.links['self'].url(), 'http://localhost%s'%next_url)
+        self.assertEquals(response_doc.links['self'].url(), 'http://localhost%s' % next_url)
 
 
     def test_create_dataset(self):
         """
         Verify that a POST to /datasets will create a new dataset
         """
-        # headers = [('Content-Type', 'application/json')]
-        # data = {'test':'something'}
-        # json_data = json.dumps(data)
-        # json_data_length = len(json_data)
-        # headers.append(('Content-Length', json_data_length))
-        #
-        # self.client.post('/datasets', headers, data=json_data)
+        data = populate_db()
+        org = data['orgs'][0].id
+        creator = data['users'][0].id
 
 
-        self.assertTrue(False, "Not implemented yet")
+        response = self.client.post('/datasets', data=json.dumps({
+                'organization': str(org),
+                'created_by': str(creator),
+                'title':'footest'
+            }), content_type='application/json',
+            environ_base={
+                'HTTP_USER_AGENT': 'Chrome',
+                'REMOTE_ADDR': '127.0.0.1'
+            })
 
+        print response
 
-def populate_db(num_datasets):
+def populate_db(num_datasets=0):
     """
     Populate the database with canned data
     """
@@ -150,11 +155,16 @@ def populate_db(num_datasets):
     org1 = model.Organization(title='org1')
     org1.save()
 
-    datasets = [model.Dataset(title='Dataset%d'% x, organization=org1, created_by=user1) for x in range(num_datasets)]
+    data = dict(users=[user1], orgs=[org1])
 
-    for dataset in datasets:
-        dataset.save()
+    if num_datasets:
+        datasets = [model.Dataset(title='Dataset%d'% x, organization=org1, created_by=user1) for x in range(num_datasets)]
 
-    return dict(users=[user1], datasets=datasets)
+        for dataset in datasets:
+            dataset.save()
+
+        data['datasets']=datasets
+
+    return data
 
 
