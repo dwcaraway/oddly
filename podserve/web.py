@@ -3,6 +3,7 @@ from urllib import urlencode
 from flask import jsonify, Response, abort, Blueprint, request, url_for, make_response
 from dougrain import Builder, Document
 from podserve.model import Dataset, User, Organization, Schema
+from mongoengine import NotUniqueError
 from bson import ObjectId
 
 __author__ = 'dwcaraway'
@@ -186,7 +187,13 @@ def create_user():
                 email=data['email'],
                 display_name=data['display_name']
     )
-    user.save()
+
+    try:
+        user.save()
+    except NotUniqueError:
+        resp = Response(json.dumps({'error':'That user already exists'}), headers={'Content-Type':'application/json'})
+        resp.status_code = 409  #Conflict
+        return resp
 
     response = Response(headers={'Location': url_for('.get_user', id=user.id), 'Content-Type':'text/plain'})
     response.status_code = 201
